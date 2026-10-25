@@ -186,7 +186,7 @@ const TOOLS = [
   },
   {
     name: 'nanofield_list_creations',
-    description: 'Fetch recent creations, gallery packages, and prompts from the Nano Field Studio library.',
+    description: 'Fetch recent creations, gallery packages, and prompts from the Nano Field Studio library. You can also pass a specific "filename" to display that exact thumbnail inline.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -194,8 +194,26 @@ const TOOLS = [
           type: 'integer',
           default: 20,
           description: 'Maximum number of recent creations to return.'
+        },
+        filename: {
+          type: 'string',
+          description: 'Optional specific filename to view (e.g. "nanofield_1792923750658_v1_hupq.png"). If specified, delivers this image inline.'
         }
       }
+    }
+  },
+  {
+    name: 'nanofield_get_image',
+    description: 'Fetch and display any generated image, thumbnail, or creation inline in chat by its filename or media URL.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filename: {
+          type: 'string',
+          description: 'The filename or URL of the image to display (e.g., "nanofield_1792923750658_v1_hupq.png" or "https://.../media/nanofield_...png").'
+        }
+      },
+      required: ['filename']
     }
   },
   {
@@ -529,13 +547,16 @@ export default async function handler(req, res) {
         });
       }
 
-      // 7. CREATIONS GALLERY: LIST CREATIONS
-      if (toolName === 'nanofield_list_creations') {
-        const { limit = 10 } = toolArgs;
+      // 7. CREATIONS GALLERY: LIST CREATIONS & GET IMAGE
+      if (toolName === 'nanofield_list_creations' || toolName === 'nanofield_get_image') {
+        const { limit = 10, filename: reqFilename } = toolArgs;
         let creations = [];
 
         try {
-          const lRes = await fetch(`${localEngineUrl}/api/v1/latest?include_base64=true`, { signal: AbortSignal.timeout(10000) });
+          const queryUrl = reqFilename
+            ? `${localEngineUrl}/api/v1/latest?include_base64=true&filename=${encodeURIComponent(reqFilename)}`
+            : `${localEngineUrl}/api/v1/latest?include_base64=true`;
+          const lRes = await fetch(queryUrl, { signal: AbortSignal.timeout(10000) });
           if (lRes.ok) {
             const data = await lRes.json();
             creations = (data.images || []).map(f => ({
@@ -555,7 +576,7 @@ export default async function handler(req, res) {
 
         const responseContent = [];
 
-        // Deliver native MCP image block for the latest creation so Claude renders it directly
+        // Deliver native MCP image block for the primary creation so Claude renders it directly
         if (creations[0]?.base64) {
           const rawBase64 = creations[0].base64.replace(/^data:image\/\w+;base64,/, '').replace(/[\r\n]/g, '');
           const mimeType = rawBase64.startsWith('/9j/') ? 'image/jpeg' : (rawBase64.startsWith('iVBORw') ? 'image/png' : 'image/jpeg');
@@ -566,7 +587,10 @@ export default async function handler(req, res) {
           });
         }
 
-        let markdown = `### 🎨 Recent Studio Creations (${creations.length})\n\n`;
+        let markdown = toolName === 'nanofield_get_image' && creations[0]
+          ? `### 🖼️ Studio Asset: \`${creations[0].title}\`\n\n- **Direct URL**: ${creations[0].url}\n- **Studio Library**: ${officialBaseUrl}/library\n\n`
+          : `### 🎨 Recent Studio Creations (${creations.length})\n\n`;
+
         creations.slice(0, Number(limit)).forEach((item, idx) => {
           markdown += `**${idx + 1}. \`${item.title}\`**\n`;
           markdown += `- **Direct URL**: ${item.url}\n`;
