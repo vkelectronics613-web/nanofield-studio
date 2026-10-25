@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(400).send('Invalid file format requested');
   }
 
-  const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://keyword-lou-indianapolis-sitting.trycloudflare.com';
+  const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://external-smallest-thank-isaac.trycloudflare.com';
 
   try {
     const upstreamRes = await fetch(`${localEngineUrl}/media/${cleanName}`, {
