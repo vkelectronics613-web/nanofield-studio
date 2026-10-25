@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         aspect_ratio,
         variants: targetVariants
       }),
-      signal: AbortSignal.timeout(45000)
+      signal: AbortSignal.timeout(55000)
     });
 
     if (bridgeRes.ok) {

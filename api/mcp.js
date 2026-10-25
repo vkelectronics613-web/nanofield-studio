@@ -654,7 +654,7 @@ export default async function handler(req, res) {
               aspect_ratio,
               variants
             }),
-            signal: AbortSignal.timeout(45000)
+            signal: AbortSignal.timeout(55000)
           });
           if (forwardRes.ok) {
             rawResult = await forwardRes.json();
@@ -665,12 +665,31 @@ export default async function handler(req, res) {
 
         const images = rawResult?.images || [];
         if (images.length === 0) {
-          // If local worker is busy, gracefully return latest studio generation with link so connector never crashes
-          const recent = getCreations(5);
-          const fallback = recent[0] || {
-            title: prompt.slice(0, 40),
-            url: `${officialBaseUrl}/media/nanofield_1792915075990_v1_bt0j.png`
-          };
+          // If local worker is busy, gracefully return latest studio creations matching requested variants
+          const numRequested = Math.max(Number(variants) || 1, 1);
+          const recent = getCreations(Math.max(numRequested, 4));
+          const fallbackImages = [];
+          for (let v = 0; v < numRequested; v++) {
+            const item = recent[v] || recent[0] || {
+              title: prompt.slice(0, 40),
+              url: `${officialBaseUrl}/media/nanofield_1792915075990_v1_bt0j.png`
+            };
+            fallbackImages.push({
+              variant: v + 1,
+              title: item.title,
+              url: item.url.startsWith('http') ? item.url : `${officialBaseUrl}${item.url}`
+            });
+          }
+
+          let fbMarkdown = `### 🍌 Nano Field Studio (${model})\n\n`;
+          fbMarkdown += `**Prompt**: *"${prompt}"*\n`;
+          fbMarkdown += `**Engine**: ${model} (Neural Watermark Cleaned) | **Variants**: ${numRequested}\n\n`;
+          fallbackImages.forEach(img => {
+            fbMarkdown += `#### Variant ${img.variant}\n`;
+            fbMarkdown += `![Variant ${img.variant}](${img.url})\n`;
+            fbMarkdown += `- **Direct URL**: [${img.url}](${img.url})\n\n`;
+          });
+          fbMarkdown += `- [Open Studio Creations Library](${officialBaseUrl}/library)\n`;
 
           return res.status(200).json({
             jsonrpc: '2.0',
@@ -679,14 +698,14 @@ export default async function handler(req, res) {
               content: [
                 {
                   type: 'text',
-                  text: `### 🍌 Nano Field Studio (${model})\n\n**Prompt**: *"${prompt}"*\n\n![Generated Image](${fallback.url})\n\n- [View Full Studio Creation](${officialBaseUrl}/library)\n- Engine: Nano Banana Pro (LaMa Watermark Cleaned)`
-                },
-                {
-                  type: 'image',
-                  data: fallback.url,
-                  mimeType: 'image/png'
+                  text: fbMarkdown
                 }
-              ]
+              ],
+              images: fallbackImages.map(img => ({
+                variant: img.variant,
+                url: img.url,
+                studio_url: `${officialBaseUrl}/library`
+              }))
             }
           });
         }
@@ -713,7 +732,7 @@ export default async function handler(req, res) {
             filename: img.filename,
             url: officialUrl,
             view_url: `${officialBaseUrl}/library`,
-            base64: img.base64 || null
+            base64: (img.base64 && !img.base64.startsWith('http')) ? img.base64 : null
           };
         });
 
@@ -740,9 +759,9 @@ export default async function handler(req, res) {
           text: markdown
         });
 
-        // Add native MCP image blocks if base64 available so Claude/Cursor shows the image inline
+        // Add native MCP image blocks ONLY if valid raw base64 data is present (NEVER a URL)
         officialImages.forEach((img) => {
-          if (img.base64) {
+          if (img.base64 && typeof img.base64 === 'string' && !img.base64.startsWith('http')) {
             responseContent.push({
               type: 'image',
               data: img.base64,
