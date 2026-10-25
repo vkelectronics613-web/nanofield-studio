@@ -1,37 +1,6 @@
 // In-memory persistent creations feed across Vercel invocations
 if (!globalThis.nanofieldCreations) {
-  globalThis.nanofieldCreations = [
-    {
-      id: 'c-1',
-      title: 'Golden Eagle on Mountain Ledge',
-      prompt: 'portrait of a majestic golden eagle perched on a mountain ledge, cinematic lighting, 8k',
-      model: 'Nano Banana 2.1',
-      aspect: '16:9',
-      url: 'https://web-nine-eta-b63lv577w6.vercel.app/media/nanofield_1792911009262_v1_3zl3.png',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      likes: 42
-    },
-    {
-      id: 'c-2',
-      title: 'Futuristic Electric Hypercar',
-      prompt: 'a sleek futuristic electric sportscar on neon highway, 8k',
-      model: 'Nano Banana 2.1',
-      aspect: '16:9',
-      url: 'https://web-nine-eta-b63lv577w6.vercel.app/media/nanofield_1792910472373_v1_nq1e.png',
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-      likes: 89
-    },
-    {
-      id: 'c-3',
-      title: 'Lighthouse on Stormy Coastline',
-      prompt: 'a lighthouse on a stormy coastline at golden hour',
-      model: 'Nano Banana 2.1',
-      aspect: '16:9',
-      url: 'https://web-nine-eta-b63lv577w6.vercel.app/media/nanofield_1792910064026_v1_lahk.png',
-      timestamp: new Date(Date.now() - 10800000).toISOString(),
-      likes: 64
-    }
-  ];
+  globalThis.nanofieldCreations = [];
 }
 
 export function addCreation(item) {

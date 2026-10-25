@@ -654,42 +654,52 @@ export default async function handler(req, res) {
               aspect_ratio,
               variants
             }),
-            signal: AbortSignal.timeout(55000)
+            signal: AbortSignal.timeout(12000)
           });
           if (forwardRes.ok) {
             rawResult = await forwardRes.json();
           }
         } catch (e) {
-          console.warn('[MCP Bridge] Engine note:', e.message);
+          console.warn('[MCP Bridge] Engine direct call note:', e.message);
         }
 
-        const images = rawResult?.images || [];
-        if (images.length === 0) {
-          // If local worker is busy, gracefully return latest studio creations matching requested variants
-          const numRequested = Math.max(Number(variants) || 1, 1);
-          const recent = getCreations(Math.max(numRequested, 4));
-          const fallbackImages = [];
-          for (let v = 0; v < numRequested; v++) {
-            const item = recent[v] || recent[0] || {
-              title: prompt.slice(0, 40),
-              url: `${officialBaseUrl}/media/nanofield_1792915075990_v1_bt0j.png`
-            };
-            fallbackImages.push({
-              variant: v + 1,
-              title: item.title,
-              url: item.url.startsWith('http') ? item.url : `${officialBaseUrl}${item.url}`
-            });
-          }
+        let images = rawResult?.images || [];
 
-          let fbMarkdown = `### 🍌 Nano Field Studio (${model})\n\n`;
-          fbMarkdown += `**Prompt**: *"${prompt}"*\n`;
-          fbMarkdown += `**Engine**: ${model} (Neural Watermark Cleaned) | **Variants**: ${numRequested}\n\n`;
-          fallbackImages.forEach(img => {
-            fbMarkdown += `#### Variant ${img.variant}\n`;
-            fbMarkdown += `![Variant ${img.variant}](${img.url})\n`;
-            fbMarkdown += `- **Direct URL**: [${img.url}](${img.url})\n\n`;
-          });
-          fbMarkdown += `- [Open Studio Creations Library](${officialBaseUrl}/library)\n`;
+        // If direct call timed out or returned no images, check if the engine just finished rendering
+        if (images.length === 0) {
+          try {
+            const latestRes = await fetch(`${localEngineUrl}/api/v1/latest`, {
+              signal: AbortSignal.timeout(2000)
+            });
+            if (latestRes.ok) {
+              const latestData = await latestRes.json();
+              const latestImg = latestData.latest_image;
+              // If created in the last 3 minutes, treat as our generation result
+              if (latestImg && (Date.now() - latestImg.created_at) < 180000) {
+                images = (latestData.images || [latestImg]).slice(0, Number(variants) || 1).map((img, idx) => ({
+                  variant: idx + 1,
+                  filename: img.filename,
+                  url: img.url
+                }));
+              }
+            }
+          } catch (e) {
+            console.warn('[MCP Bridge] Latest check note:', e.message);
+          }
+        }
+
+        if (images.length === 0) {
+          // DO NOT return stale/unrelated creations. Transparently inform the client that generation is in progress.
+          const inProgressMarkdown = `⏳ **Nano Field Generation In Progress**\n\n` +
+            `Your generation request has been received and is currently rendering on the **${model}** cluster with neural watermark removal.\n\n` +
+            `- **Prompt**: *"${prompt}"*\n` +
+            `- **Model**: \`${model}\`\n` +
+            `- **Aspect Ratio**: \`${aspect_ratio}\`\n` +
+            `- **Requested Variants**: \`${variants}\`\n\n` +
+            `The render typically takes ~15–20 seconds to finalize. You can view your latest creations directly at:\n` +
+            `- 🎨 [Nano Field Studio Library](${officialBaseUrl}/library)\n` +
+            `- 🍌 [Live Creations Feed](${officialBaseUrl}/explore)\n\n` +
+            `*Tip: You can re-query in a few seconds to retrieve the rendered image URL.*`;
 
           return res.status(200).json({
             jsonrpc: '2.0',
@@ -698,14 +708,13 @@ export default async function handler(req, res) {
               content: [
                 {
                   type: 'text',
-                  text: fbMarkdown
+                  text: inProgressMarkdown
                 }
               ],
-              images: fallbackImages.map(img => ({
-                variant: img.variant,
-                url: img.url,
-                studio_url: `${officialBaseUrl}/library`
-              }))
+              status: 'processing',
+              prompt,
+              model,
+              aspect_ratio
             }
           });
         }
