@@ -14,7 +14,7 @@ export const config = {
 const TOOLS = [
   {
     name: 'nanofield_generate',
-    description: 'Generate high-fidelity cinematic and commercial AI images using Nano Field Studio models (Nano Banana 2.1 flagship or Nano Banana Pro). Automatically removes Gemini watermark with LaMa inpainting. Supports multi-variant generation (1, 2, or 4 images), all aspect ratios (16:9, 21:9, 1:1, 9:16, 4:3, 3:4), character handle tagging (@persona), and project assignment.',
+    description: 'Generate high-fidelity cinematic and commercial AI images using Nano Field Studio models (Nano Banana 2.1 flagship or Nano Banana Pro). Automatically removes Gemini watermark with LaMa inpainting. Returns both an attached image content block and public URL. In Claude Web, display the generated image visually on the user\'s screen using an HTML artifact with an <img> tag.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -781,13 +781,16 @@ export default async function handler(req, res) {
 
         officialImages.forEach((img) => {
           markdown += `#### Variant ${img.variant}\n`;
-          markdown += `- **Permanent Link**: [${img.url}](${img.url})\n`;
-          markdown += `- **Studio Dashboard**: [View on Nano Field Site](${officialBaseUrl}/library)\n\n`;
+          markdown += `- **Direct Image URL**: [${img.url}](${img.url})\n`;
+          markdown += `- **Studio Dashboard**: [View in Studio Library](${officialBaseUrl}/library)\n\n`;
         });
 
         if (project_id) {
-          markdown += `📁 *Saved to project: "${project_id}" ([Open Projects](${officialBaseUrl}/projects))*\n`;
+          markdown += `📁 *Saved to project: "${project_id}" ([Open Projects](${officialBaseUrl}/projects))*\n\n`;
         }
+
+        markdown += `> **Display Note for Claude / Web AI**:\n` +
+          `> Since Claude Web does not render remote images directly inside conversational markdown, please render an **Artifact** (HTML preview) containing an \`<img src="${officialImages[0]?.url}" alt="${prompt}" style="max-width:100%; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.5);" />\` so the user can view the render visually on their screen.\n`;
 
         responseContent.push({
           type: 'text',
