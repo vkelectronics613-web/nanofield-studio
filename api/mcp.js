@@ -535,7 +535,7 @@ export default async function handler(req, res) {
         let creations = [];
 
         try {
-          const lRes = await fetch(`${localEngineUrl}/api/v1/latest?include_base64=true`, { signal: AbortSignal.timeout(5000) });
+          const lRes = await fetch(`${localEngineUrl}/api/v1/latest`, { signal: AbortSignal.timeout(10000) });
           if (lRes.ok) {
             const data = await lRes.json();
             creations = (data.images || []).map(f => ({
