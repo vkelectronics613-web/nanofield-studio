@@ -320,6 +320,7 @@ export default async function handler(req, res) {
   const host = req.headers['x-forwarded-host'] || req.headers.host || 'web-nine-eta-b63lv577w6.vercel.app';
   const protocol = req.headers['x-forwarded-proto'] || 'https';
   const officialBaseUrl = `${protocol}://${host}`;
+  const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://external-smallest-thank-isaac.trycloudflare.com';
 
   // Handle SSE connection for Remote MCP
   if (req.method === 'GET') {
@@ -534,7 +535,7 @@ export default async function handler(req, res) {
         let creations = [];
 
         try {
-          const lRes = await fetch(`${localEngineUrl}/api/v1/latest`, { signal: AbortSignal.timeout(5000) });
+          const lRes = await fetch(`${localEngineUrl}/api/v1/latest?include_base64=true`, { signal: AbortSignal.timeout(5000) });
           if (lRes.ok) {
             const data = await lRes.json();
             creations = (data.images || []).map(f => ({
@@ -711,7 +712,6 @@ export default async function handler(req, res) {
           }
         }
 
-        const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://external-smallest-thank-isaac.trycloudflare.com';
         let rawResult = null;
 
         try {
@@ -739,7 +739,7 @@ export default async function handler(req, res) {
         // If direct call timed out or returned no images, check if the engine just finished rendering
         if (images.length === 0) {
           try {
-            const latestRes = await fetch(`${localEngineUrl}/api/v1/latest`, {
+            const latestRes = await fetch(`${localEngineUrl}/api/v1/latest?include_base64=true`, {
               signal: AbortSignal.timeout(2000)
             });
             if (latestRes.ok) {
@@ -750,7 +750,8 @@ export default async function handler(req, res) {
                 images = (latestData.images || [latestImg]).slice(0, Number(variants) || 1).map((img, idx) => ({
                   variant: idx + 1,
                   filename: img.filename,
-                  url: img.url
+                  url: img.url,
+                  base64: img.base64
                 }));
               }
             }
@@ -817,7 +818,7 @@ export default async function handler(req, res) {
         });
 
         // Ensure base64 is populated for Claude and remote AI sandboxes
-        for (const img of officialImages) {
+        await Promise.all(officialImages.map(async (img) => {
           if (!img.base64 && img.filename) {
             try {
               const bRes = await fetch(`${localEngineUrl}/media/${img.filename}`, { signal: AbortSignal.timeout(3000) });
@@ -829,7 +830,7 @@ export default async function handler(req, res) {
               console.warn('[MCP] Could not fetch base64:', err.message);
             }
           }
-        }
+        }));
 
         // Build dual MCP response: Native MCP Image content blocks FIRST + Contextual metadata
         const responseContent = [];
