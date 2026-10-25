@@ -75,8 +75,21 @@ export default function App() {
   });
   const [editorTool, setEditorTool] = useState('prompt-edit');
   const [credits, setCredits] = useState(1250);
+  const [isUnlimitedPlan, setIsUnlimitedPlan] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('nanofield_unlimited_plan') === 'true';
+    }
+    return false;
+  });
   const [initialPrompt, setInitialPrompt] = useState('');
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+
+  const handleActivateUnlimited = () => {
+    setIsUnlimitedPlan(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('nanofield_unlimited_plan', 'true');
+    }
+  };
 
   useEffect(() => {
     const initialPath = window.location.pathname;
@@ -134,6 +147,7 @@ export default function App() {
   };
 
   const deductCredits = (amount) => {
+    if (isUnlimitedPlan) return; // 30-Day Unlimited Nano Banana Pro Plan active!
     setCredits((prev) => Math.max(0, prev - amount));
   };
 
@@ -144,6 +158,7 @@ export default function App() {
         <Sidebar 
           currentTab={currentTab} 
           setTab={handleNavigate} 
+          isUnlimitedPlan={isUnlimitedPlan}
           onUpgradeClick={() => setIsUpgradeOpen(true)} 
         />
       </div>
@@ -152,6 +167,7 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
         <Header 
           credits={credits} 
+          isUnlimitedPlan={isUnlimitedPlan}
           onUpgradeClick={() => setIsUpgradeOpen(true)}
           onNewCreate={() => handleNavigate('create')}
           onSelectTool={handleSelectStudioTool}
@@ -162,6 +178,8 @@ export default function App() {
             <HomeScreen 
               setTab={handleNavigate} 
               setInitialPrompt={setInitialPrompt} 
+              isUnlimitedPlan={isUnlimitedPlan}
+              onActivateUnlimited={handleActivateUnlimited}
             />
           )}
 
@@ -246,6 +264,8 @@ export default function App() {
       <UpgradeModal 
         isOpen={isUpgradeOpen} 
         onClose={() => setIsUpgradeOpen(false)} 
+        isUnlimitedPlan={isUnlimitedPlan}
+        onActivateUnlimited={handleActivateUnlimited}
       />
     </div>
   );

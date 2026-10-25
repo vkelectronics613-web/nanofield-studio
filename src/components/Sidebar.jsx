@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { BananaLogo } from './BananaLogo';
 
-export function Sidebar({ currentTab, setTab, onUpgradeClick }) {
+export function Sidebar({ currentTab, setTab, onUpgradeClick, isUnlimitedPlan }) {
   const studioNav = [
     { id: 'home', label: 'Explore', icon: Compass },
     { id: 'create', label: 'Image Studio', icon: Sparkles, badge: 'Flagship' },
@@ -187,7 +187,9 @@ export function Sidebar({ currentTab, setTab, onUpgradeClick }) {
           />
           <div className="min-w-0 flex-1">
             <div className="text-xs font-bold text-white truncate">Creator Studio</div>
-            <div className="text-[10px] text-purple-400 truncate">1,250 Credits Left</div>
+            <div className="text-[10px] text-purple-400 truncate">
+              {isUnlimitedPlan ? '∞ 30-Day Unlimited' : '1,250 Credits Left'}
+            </div>
           </div>
           <Settings className="w-3.5 h-3.5 text-slate-400 group-hover:rotate-45 transition-transform" />
         </div>

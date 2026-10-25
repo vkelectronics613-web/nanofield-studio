@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, Coins, Sparkles, LayoutGrid, ChevronDown, Wand2 } from 'lucide-react';
+import { Search, Bell, Coins, Sparkles, LayoutGrid, ChevronDown, Wand2, Zap, Crown } from 'lucide-react';
 import { StudioToolsMenu } from './StudioToolsMenu';
 
-export function Header({ credits, onUpgradeClick, onNewCreate, onSelectTool }) {
+export function Header({ credits, isUnlimitedPlan, onUpgradeClick, onNewCreate, onSelectTool }) {
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const toolsMenuRef = useRef(null);
 
@@ -63,15 +63,30 @@ export function Header({ credits, onUpgradeClick, onNewCreate, onSelectTool }) {
           )}
         </div>
 
-        {/* Credits Counter Pill */}
+        {/* Credits / Unlimited Pass Pill */}
         <button 
           onClick={onUpgradeClick}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#12121c] border border-purple-500/30 hover:border-purple-500/60 transition-all text-xs font-medium text-slate-300 group"
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all group ${
+            isUnlimitedPlan
+              ? 'bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-fuchsia-500/20 border-amber-400/60 text-amber-200 shadow-md shadow-amber-500/10'
+              : 'bg-[#12121c] border-purple-500/30 hover:border-purple-500/60 text-slate-300'
+          }`}
         >
-          <Coins className="w-3.5 h-3.5 text-amber-400 fill-amber-400/30" />
-          <span className="hidden sm:inline"><strong className="text-white">{credits.toLocaleString()}</strong> credits</span>
-          <span className="sm:hidden"><strong className="text-white">{credits.toLocaleString()}</strong></span>
-          <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1 rounded font-semibold">+</span>
+          {isUnlimitedPlan ? (
+            <>
+              <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <span className="hidden sm:inline"><strong className="text-white font-mono">∞ Unlimited</strong> (30 Days)</span>
+              <span className="sm:hidden"><strong className="text-white font-mono">∞ Pass</strong></span>
+              <span className="text-[9px] bg-amber-400/20 text-amber-300 px-1 rounded font-bold uppercase tracking-wider">PRO</span>
+            </>
+          ) : (
+            <>
+              <Coins className="w-3.5 h-3.5 text-amber-400 fill-amber-400/30" />
+              <span className="hidden sm:inline"><strong className="text-white">{credits.toLocaleString()}</strong> credits</span>
+              <span className="sm:hidden"><strong className="text-white">{credits.toLocaleString()}</strong></span>
+              <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1 rounded font-semibold">+ Add</span>
+            </>
+          )}
         </button>
 
         {/* Quick Create Button */}
