@@ -652,7 +652,8 @@ export default async function handler(req, res) {
               prompt: finalPrompt,
               model,
               aspect_ratio,
-              variants
+              variants,
+              include_base64: true
             }),
             signal: AbortSignal.timeout(12000)
           });
@@ -744,6 +745,21 @@ export default async function handler(req, res) {
             base64: (img.base64 && !img.base64.startsWith('http')) ? img.base64 : null
           };
         });
+
+        // Ensure base64 is populated for Claude and remote AI sandboxes
+        for (const img of officialImages) {
+          if (!img.base64 && img.filename) {
+            try {
+              const bRes = await fetch(`${localEngineUrl}/media/${img.filename}`, { signal: AbortSignal.timeout(3000) });
+              if (bRes.ok) {
+                const buf = await bRes.arrayBuffer();
+                img.base64 = Buffer.from(buf).toString('base64');
+              }
+            } catch (err) {
+              console.warn('[MCP] Could not fetch base64:', err.message);
+            }
+          }
+        }
 
         // Build dual MCP response: Rich Markdown + Native MCP Image content blocks
         const responseContent = [];
