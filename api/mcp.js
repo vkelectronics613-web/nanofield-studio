@@ -739,8 +739,8 @@ export default async function handler(req, res) {
         // If direct call timed out or returned no images, check if the engine just finished rendering
         if (images.length === 0) {
           try {
-            const latestRes = await fetch(`${localEngineUrl}/api/v1/latest?include_base64=true`, {
-              signal: AbortSignal.timeout(2000)
+            const latestRes = await fetch(`${localEngineUrl}/api/v1/latest`, {
+              signal: AbortSignal.timeout(5000)
             });
             if (latestRes.ok) {
               const latestData = await latestRes.json();
@@ -750,8 +750,7 @@ export default async function handler(req, res) {
                 images = (latestData.images || [latestImg]).slice(0, Number(variants) || 1).map((img, idx) => ({
                   variant: idx + 1,
                   filename: img.filename,
-                  url: img.url,
-                  base64: img.base64
+                  url: img.url
                 }));
               }
             }
@@ -821,7 +820,7 @@ export default async function handler(req, res) {
         await Promise.all(officialImages.map(async (img) => {
           if (!img.base64 && img.filename) {
             try {
-              const bRes = await fetch(`${localEngineUrl}/media/${img.filename}`, { signal: AbortSignal.timeout(3000) });
+              const bRes = await fetch(`${localEngineUrl}/media/${img.filename}`, { signal: AbortSignal.timeout(6000) });
               if (bRes.ok) {
                 const buf = await bRes.arrayBuffer();
                 img.base64 = Buffer.from(buf).toString('base64');
