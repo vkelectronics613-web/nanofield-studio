@@ -137,12 +137,15 @@ export default function App() {
   };
 
   const handleSelectStudioTool = (tool) => {
+    if (!tool) return;
     if (tool.tab === 'storyboard') {
       handleNavigate('storyboard');
     } else if (tool.tab === 'create') {
-      handleNavigate('create');
-    } else {
+      handleNavigate('create', tool.tool);
+    } else if (tool.tab === 'edit') {
       handleNavigate('edit', tool.tool || 'prompt-edit');
+    } else {
+      handleNavigate(tool.tab || 'home', tool.tool);
     }
   };
 
