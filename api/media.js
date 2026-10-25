@@ -30,14 +30,14 @@ export default async function handler(req, res) {
 
   try {
     const upstreamRes = await fetch(`${localEngineUrl}/media/${cleanName}`, {
-      signal: AbortSignal.timeout(15000)
+      signal: AbortSignal.timeout(45000)
     });
 
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).send('Media not found on engine');
     }
 
-    const contentType = cleanName.endsWith('.jpg') || cleanName.endsWith('.jpeg') ? 'image/jpeg' : 'image/png';
+    const contentType = upstreamRes.headers.get('content-type') || (cleanName.endsWith('.png') ? 'image/png' : 'image/jpeg');
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
