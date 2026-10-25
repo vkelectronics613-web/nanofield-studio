@@ -104,43 +104,46 @@ export function McpDashboardScreen() {
     setIsExecuting(true);
     setMcpResponse(null);
 
-    try {
-      if (mcpTool === 'nanofield_status') {
-        const res = await fetch('/api/mcp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'tools/call',
-            params: { name: 'nanofield_status', arguments: {} }
-          })
-        });
-        const data = await res.json();
-        setMcpResponse(data);
-      } else {
-        const res = await fetch('/api/mcp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 2,
-            method: 'tools/call',
-            params: {
-              name: 'nanofield_generate',
-              arguments: {
-                prompt: mcpPrompt,
-                model: mcpModel,
-                aspect_ratio: mcpRatio,
-                variants: mcpVariants
-              }
-            }
-          })
-        });
+    let callParams = { name: mcpTool, arguments: {} };
+    if (mcpTool === 'nanofield_generate') {
+      callParams.arguments = {
+        prompt: mcpPrompt,
+        model: mcpModel,
+        aspect_ratio: mcpRatio,
+        variants: mcpVariants
+      };
+    } else if (mcpTool === 'nanofield_create_project') {
+      callParams.arguments = {
+        name: 'HyperDrive Campaign 2026',
+        description: 'Autonomous multi-shot commercial asset collection',
+        category: 'Commercial Ads'
+      };
+    } else if (mcpTool === 'nanofield_create_character') {
+      callParams.arguments = {
+        handle: '@cyber_samurai',
+        name: 'Kaelen Vance',
+        role: 'Cyberpunk Ronin',
+        hair: 'Neon cyan undercut braid',
+        eyes: 'Amber cybernetic iris',
+        wardrobe: 'Matte-black techwear haori'
+      };
+    } else if (mcpTool === 'nanofield_list_creations') {
+      callParams.arguments = { limit: 10 };
+    }
 
-        const data = await res.json();
-        setMcpResponse(data);
-      }
+    try {
+      const res = await fetch('/api/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: Date.now(),
+          method: 'tools/call',
+          params: callParams
+        })
+      });
+      const data = await res.json();
+      setMcpResponse(data);
     } catch (err) {
       setMcpResponse({
         jsonrpc: '2.0',
@@ -292,27 +295,27 @@ export function McpDashboardScreen() {
           </div>
 
           {/* Tool Selector */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setMcpTool('nanofield_generate')}
-              className={`p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                mcpTool === 'nanofield_generate'
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-md'
-                  : 'bg-[#08080c] border-[#1f1f2e] text-slate-400'
-              }`}
-            >
-              nanofield_generate
-            </button>
-            <button
-              onClick={() => setMcpTool('nanofield_status')}
-              className={`p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                mcpTool === 'nanofield_status'
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-md'
-                  : 'bg-[#08080c] border-[#1f1f2e] text-slate-400'
-              }`}
-            >
-              nanofield_status
-            </button>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: 'nanofield_generate', label: 'Generate' },
+              { id: 'nanofield_create_project', label: 'Create Project' },
+              { id: 'nanofield_list_projects', label: 'List Projects' },
+              { id: 'nanofield_create_character', label: 'Save Persona' },
+              { id: 'nanofield_list_creations', label: 'Library Feed' },
+              { id: 'nanofield_status', label: 'Status' }
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setMcpTool(t.id)}
+                className={`p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                  mcpTool === t.id
+                    ? 'bg-purple-600 text-white border-purple-400 shadow-md'
+                    : 'bg-[#08080c] border-[#1f1f2e] text-slate-400 hover:text-white'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
           {mcpTool === 'nanofield_generate' && (

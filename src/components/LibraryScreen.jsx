@@ -1,13 +1,39 @@
-import React, { useState } from 'react';
-import { Search, Filter, Download, Sliders, Trash2, Heart, Share2, MoreVertical, X, Calendar, Layers } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Download, Sliders, Trash2, Heart, Share2, MoreVertical, X, Calendar, Layers, RefreshCw } from 'lucide-react';
 import { MOCK_CREATIONS } from '../data/mockData';
 
 export function LibraryScreen({ setTab, setInitialPrompt }) {
   const [activeFilter, setActiveFilter] = useState('All');
-  const [selectedImage, setSelectedImage] = useState(MOCK_CREATIONS[3]); // Golden retriever by default
+  const [creations, setCreations] = useState(MOCK_CREATIONS);
+  const [selectedImage, setSelectedImage] = useState(MOCK_CREATIONS[0]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const loadCreations = () => {
+    setLoading(true);
+    fetch('/api/creations')
+      .then(res => res.json())
+      .then(data => {
+        if (data.creations && data.creations.length > 0) {
+          setCreations(data.creations);
+          setSelectedImage(data.creations[0]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadCreations();
+  }, []);
 
   const filterTabs = ['All', 'Images', 'Projects', 'Favorites'];
+
+  const filteredCreations = creations.filter(c => {
+    if (!searchQuery) return true;
+    return (c.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+           (c.prompt || '').toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="p-8 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 items-start">
@@ -58,7 +84,7 @@ export function LibraryScreen({ setTab, setInitialPrompt }) {
 
         {/* Grid of Creations */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
-          {MOCK_CREATIONS.map((item) => {
+          {filteredCreations.map((item) => {
             const isSelected = selectedImage?.id === item.id;
             return (
               <div

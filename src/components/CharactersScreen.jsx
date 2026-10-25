@@ -85,6 +85,18 @@ export function CharactersScreen({ deductCredits }) {
 
   const [selectedElement, setSelectedElement] = useState(elements[0]);
 
+  React.useEffect(() => {
+    fetch('/api/characters')
+      .then(res => res.json())
+      .then(data => {
+        if (data.characters && data.characters.length > 0) {
+          setElements(data.characters);
+          setSelectedElement(data.characters[0]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Prompt input with @ auto-suggestion
   const [scenePrompt, setScenePrompt] = useState(
     '@cyber_samurai walking through a rain-drenched neon marketplace, eating ramen under steam, cinematic lighting'
@@ -222,6 +234,12 @@ export function CharactersScreen({ deductCredits }) {
     setElements([newEl, ...elements]);
     setSelectedElement(newEl);
     setActiveTab('recall');
+
+    fetch('/api/characters', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newEl)
+    }).catch(() => {});
   };
 
   return (

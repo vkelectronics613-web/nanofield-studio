@@ -1,3 +1,6 @@
+import { addCreation } from './creations.js';
+import { addAssetToProject } from './projects.js';
+
 export const config = {
   api: {
     bodyParser: true
@@ -22,7 +25,8 @@ export default async function handler(req, res) {
     model = 'Nano Banana 2.1',
     aspect_ratio = '16:9',
     variants = 1,
-    num_images
+    num_images,
+    project_id
   } = req.body || {};
 
   if (!prompt || typeof prompt !== 'string') {
@@ -46,8 +50,36 @@ export default async function handler(req, res) {
       }),
       signal: AbortSignal.timeout(60000)
     });
+
     if (bridgeRes.ok) {
       const data = await bridgeRes.json();
+      const host = req.headers['x-forwarded-host'] || req.headers.host || 'web-nine-eta-b63lv577w6.vercel.app';
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      const officialBaseUrl = `${protocol}://${host}`;
+
+      const mappedImages = (data.images || []).map((img, idx) => {
+        const officialUrl = `${officialBaseUrl}/media/${img.filename}`;
+        addCreation({
+          title: prompt.slice(0, 40),
+          prompt,
+          model,
+          aspect_ratio,
+          url: officialUrl,
+          project_id
+        });
+        if (project_id) {
+          addAssetToProject(project_id, officialUrl);
+        }
+        return {
+          ...img,
+          url: officialUrl,
+          official_url: officialUrl,
+          studio_url: `${officialBaseUrl}/library`
+        };
+      });
+
+      data.images = mappedImages;
+      data.image_url = mappedImages[0]?.url || null;
       return res.status(200).json(data);
     } else {
       const errData = await bridgeRes.json().catch(() => ({}));
