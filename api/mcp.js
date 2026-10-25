@@ -530,20 +530,58 @@ export default async function handler(req, res) {
 
       // 7. CREATIONS GALLERY: LIST CREATIONS
       if (toolName === 'nanofield_list_creations') {
-        const { limit = 20 } = toolArgs;
-        const creations = getCreations(Number(limit));
+        const { limit = 10 } = toolArgs;
+        let creations = [];
+
+        try {
+          const lRes = await fetch(`${localEngineUrl}/api/v1/latest`, { signal: AbortSignal.timeout(5000) });
+          if (lRes.ok) {
+            const data = await lRes.json();
+            creations = (data.images || []).map(f => ({
+              title: f.filename,
+              url: `${officialBaseUrl}/media/${f.filename}`,
+              base64: f.base64,
+              created_at: f.created_at
+            }));
+          }
+        } catch (e) {
+          console.warn('[MCP list_creations note]:', e.message);
+        }
+
+        if (creations.length === 0) {
+          creations = getCreations(Number(limit));
+        }
+
+        const responseContent = [];
+
+        // Deliver native MCP image block for the latest creation so Claude renders it directly
+        if (creations[0]?.base64) {
+          const rawBase64 = creations[0].base64.replace(/^data:image\/\w+;base64,/, '').replace(/[\r\n]/g, '');
+          const mimeType = rawBase64.startsWith('/9j/') ? 'image/jpeg' : (rawBase64.startsWith('iVBORw') ? 'image/png' : 'image/jpeg');
+          responseContent.push({
+            type: 'image',
+            data: rawBase64,
+            mimeType
+          });
+        }
+
         let markdown = `### 🎨 Recent Studio Creations (${creations.length})\n\n`;
-        creations.forEach((item, idx) => {
-          markdown += `**${idx + 1}. ${item.title}**\n`;
-          markdown += `![${item.title}](${item.url})\n`;
-          markdown += `- Prompt: *"${item.prompt}"*\n`;
+        creations.slice(0, Number(limit)).forEach((item, idx) => {
+          markdown += `**${idx + 1}. \`${item.title}\`**\n`;
+          markdown += `- **Direct URL**: ${item.url}\n`;
           markdown += `- [Open in Studio Library](${officialBaseUrl}/library)\n\n`;
         });
+
+        responseContent.push({
+          type: 'text',
+          text: markdown
+        });
+
         return res.status(200).json({
           jsonrpc: '2.0',
           id,
           result: {
-            content: [{ type: 'text', text: markdown }],
+            content: responseContent,
             creations: creations.map(c => ({ ...c, studio_url: `${officialBaseUrl}/library` }))
           }
         });

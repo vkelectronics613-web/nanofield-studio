@@ -37,9 +37,33 @@ export default async function handler(req, res) {
   }
 
   const { limit = 50 } = req.query;
+  const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://external-smallest-thank-isaac.trycloudflare.com';
+  let engineCreations = [];
+
+  try {
+    const lRes = await fetch(`${localEngineUrl}/api/v1/latest`, { signal: AbortSignal.timeout(3000) });
+    if (lRes.ok) {
+      const data = await lRes.json();
+      engineCreations = (data.images || []).map((img, i) => ({
+        id: `eng-${img.created_at || Date.now()}-${i}`,
+        title: img.filename,
+        prompt: 'Studio Creation',
+        model: 'Nano Banana 2.1',
+        aspect: '16:9',
+        url: `/media/${img.filename}`,
+        timestamp: new Date(img.created_at || Date.now()).toISOString(),
+        likes: 0
+      }));
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  const allCreations = [...engineCreations, ...getCreations(Number(limit))];
+
   res.status(200).json({
     success: true,
-    total: globalThis.nanofieldCreations.length,
-    creations: getCreations(Number(limit))
+    total: allCreations.length,
+    creations: allCreations.slice(0, Number(limit))
   });
 }
