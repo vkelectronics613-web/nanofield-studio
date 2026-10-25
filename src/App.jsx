@@ -169,6 +169,8 @@ export default function App() {
             <CreateScreen 
               initialPrompt={initialPrompt} 
               deductCredits={deductCredits} 
+              onSelectTool={handleSelectStudioTool}
+              onNavigate={handleNavigate}
             />
           )}
 
