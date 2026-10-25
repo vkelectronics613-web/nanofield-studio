@@ -13,7 +13,8 @@ import {
   Settings,
   ChevronRight,
   AtSign,
-  Compass
+  Compass,
+  LayoutGrid
 } from 'lucide-react';
 import { BananaLogo } from './BananaLogo';
 
@@ -21,12 +22,13 @@ export function Sidebar({ currentTab, setTab, onUpgradeClick }) {
   const studioNav = [
     { id: 'home', label: 'Explore', icon: Compass },
     { id: 'create', label: 'Image Studio', icon: Sparkles, badge: 'Flagship' },
+    { id: 'storyboard', label: 'Storyboard', icon: LayoutGrid, badge: 'Cinematic' },
     { id: 'ads', label: 'Ads Supercomputer', icon: Tv, badge: 'AI Agent' },
   ];
 
   const elementsNav = [
+    { id: 'edit', label: 'AI Image Editor', icon: Sliders, badge: '13 Tools' },
     { id: 'characters', label: 'Character Elements', icon: Users, badge: '@ DNA' },
-    { id: 'edit', label: 'AI Image Editor', icon: Sliders, badge: '4K & Dub' },
     { id: 'library', label: 'My Creations', icon: FolderHeart },
     { id: 'projects', label: 'Campaign Folders', icon: FolderKanban },
   ];

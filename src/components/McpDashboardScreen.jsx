@@ -127,8 +127,21 @@ export function McpDashboardScreen() {
         eyes: 'Amber cybernetic iris',
         wardrobe: 'Matte-black techwear haori'
       };
-    } else if (mcpTool === 'nanofield_list_creations') {
-      callParams.arguments = { limit: 10 };
+    } else if (mcpTool === 'nanofield_edit_image') {
+      callParams.arguments = {
+        image_url: 'https://web-nine-eta-b63lv577w6.vercel.app/media/nanofield_1792910472373_v1_nq1e.png',
+        action: 'photo_angle',
+        camera_angle: '3/4 Turn (45° Cinematic)',
+        prompt: 'Re-angle camera to 45 degree cinematic hero turn with volumetric rim glow'
+      };
+    } else if (mcpTool === 'nanofield_storyboard_create') {
+      callParams.arguments = {
+        title: 'Cyberpunk Chronicles 2026',
+        shots: [
+          { name: 'Shot 1: Extreme Wide', type: 'Establishing', lens: '24mm Wide', prompt: 'Neo Tokyo skyline in rain' },
+          { name: 'Shot 2: Hero Close-Up', type: 'Close-Up', lens: '85mm Portrait', prompt: 'Operative focused on terminal' }
+        ]
+      };
     }
 
     try {
@@ -295,13 +308,15 @@ export function McpDashboardScreen() {
           </div>
 
           {/* Tool Selector */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
               { id: 'nanofield_generate', label: 'Generate' },
-              { id: 'nanofield_create_project', label: 'Create Project' },
-              { id: 'nanofield_list_projects', label: 'List Projects' },
-              { id: 'nanofield_create_character', label: 'Save Persona' },
-              { id: 'nanofield_list_creations', label: 'Library Feed' },
+              { id: 'nanofield_edit_image', label: '13 Studio Tools' },
+              { id: 'nanofield_storyboard_create', label: 'Storyboard' },
+              { id: 'nanofield_create_project', label: 'Project' },
+              { id: 'nanofield_create_character', label: 'Persona' },
+              { id: 'nanofield_list_creations', label: 'Creations' },
+              { id: 'nanofield_list_projects', label: 'All Projects' },
               { id: 'nanofield_status', label: 'Status' }
             ].map((t) => (
               <button

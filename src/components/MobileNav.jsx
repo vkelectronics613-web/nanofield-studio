@@ -1,13 +1,13 @@
 import React from 'react';
-import { Compass, Sparkles, Tv, Users, Sliders } from 'lucide-react';
+import { Compass, Sparkles, LayoutGrid, Sliders, Users } from 'lucide-react';
 
 export function MobileNav({ currentTab, setTab }) {
   const items = [
     { id: 'home', label: 'Explore', icon: Compass },
     { id: 'create', label: 'Studio', icon: Sparkles },
-    { id: 'ads', label: 'Ads Agent', icon: Tv },
-    { id: 'characters', label: 'Elements', icon: Users },
+    { id: 'storyboard', label: 'Storyboard', icon: LayoutGrid },
     { id: 'edit', label: 'Editor', icon: Sliders },
+    { id: 'characters', label: 'Elements', icon: Users },
   ];
 
   return (

@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { HomeScreen } from './components/HomeScreen';
 import { CreateScreen } from './components/CreateScreen';
+import { StoryboardScreen } from './components/StoryboardScreen';
 import { AdsStudioScreen } from './components/AdsStudioScreen';
 import { EditScreen } from './components/EditScreen';
 import { CharactersScreen } from './components/CharactersScreen';
@@ -21,6 +22,8 @@ const pathToTab = (pathname) => {
     case '/imagestudio':
     case '/create':
       return 'create';
+    case '/storyboard':
+      return 'storyboard';
     case '/ads':
       return 'ads';
     case '/characters':
@@ -51,6 +54,7 @@ const pathToTab = (pathname) => {
 const tabToPath = {
   home: '/explore',
   create: '/imagestudio',
+  storyboard: '/storyboard',
   ads: '/ads',
   characters: '/characters',
   edit: '/editor',
@@ -69,6 +73,7 @@ export default function App() {
     }
     return 'home';
   });
+  const [editorTool, setEditorTool] = useState('prompt-edit');
   const [credits, setCredits] = useState(1250);
   const [initialPrompt, setInitialPrompt] = useState('');
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -78,6 +83,15 @@ export default function App() {
     const initialTab = pathToTab(initialPath);
     setCurrentTab(initialTab);
 
+    // If query string has ?tool=xxx, set initial tool for editor
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const toolParam = searchParams.get('tool');
+      if (toolParam) {
+        setEditorTool(toolParam);
+      }
+    }
+
     // If user lands on root '/', update address bar to '/explore' cleanly
     if (initialPath === '/' || initialPath === '') {
       window.history.replaceState({ tab: 'home' }, '', '/explore');
@@ -86,17 +100,36 @@ export default function App() {
     const handlePopState = () => {
       const tabFromPath = pathToTab(window.location.pathname);
       setCurrentTab(tabFromPath);
+      const searchParams = new URLSearchParams(window.location.search);
+      const toolParam = searchParams.get('tool');
+      if (toolParam) {
+        setEditorTool(toolParam);
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const handleNavigate = (tabId) => {
+  const handleNavigate = (tabId, toolId = null) => {
     setCurrentTab(tabId);
-    const targetPath = tabToPath[tabId] || '/explore';
-    if (typeof window !== 'undefined' && window.location.pathname !== targetPath) {
-      window.history.pushState({ tab: tabId }, '', targetPath);
+    let targetPath = tabToPath[tabId] || '/explore';
+    if (tabId === 'edit' && toolId) {
+      setEditorTool(toolId);
+      targetPath = `/editor?tool=${toolId}`;
+    }
+    if (typeof window !== 'undefined' && window.location.pathname + window.location.search !== targetPath) {
+      window.history.pushState({ tab: tabId, tool: toolId }, '', targetPath);
+    }
+  };
+
+  const handleSelectStudioTool = (tool) => {
+    if (tool.tab === 'storyboard') {
+      handleNavigate('storyboard');
+    } else if (tool.tab === 'create') {
+      handleNavigate('create');
+    } else {
+      handleNavigate('edit', tool.tool || 'prompt-edit');
     }
   };
 
@@ -121,6 +154,7 @@ export default function App() {
           credits={credits} 
           onUpgradeClick={() => setIsUpgradeOpen(true)}
           onNewCreate={() => handleNavigate('create')}
+          onSelectTool={handleSelectStudioTool}
         />
 
         <main className="flex-1 overflow-y-auto">
@@ -134,6 +168,12 @@ export default function App() {
           {currentTab === 'create' && (
             <CreateScreen 
               initialPrompt={initialPrompt} 
+              deductCredits={deductCredits} 
+            />
+          )}
+
+          {currentTab === 'storyboard' && (
+            <StoryboardScreen 
               deductCredits={deductCredits} 
             />
           )}
@@ -153,6 +193,7 @@ export default function App() {
           {currentTab === 'edit' && (
             <EditScreen 
               deductCredits={deductCredits} 
+              initialTool={editorTool}
             />
           )}
 

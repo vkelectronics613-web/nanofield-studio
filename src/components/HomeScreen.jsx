@@ -17,7 +17,8 @@ import {
   Check,
   ChevronRight,
   Zap,
-  AtSign
+  AtSign,
+  LayoutGrid
 } from 'lucide-react';
 import { MOCK_CREATIONS } from '../data/mockData';
 
@@ -53,14 +54,24 @@ export function HomeScreen({ setTab, setInitialPrompt }) {
       borderColor: 'border-purple-500/40 hover:border-purple-400'
     },
     {
-      id: 'ads-supercomputer',
-      title: 'Ads Supercomputer',
-      badge: 'Autonomous Agent',
-      desc: 'Takes brand briefs and generates 4-shot commercial asset packages',
-      icon: Tv,
-      tab: 'ads',
-      color: 'from-blue-600/30 via-cyan-600/20 to-transparent',
-      borderColor: 'border-blue-500/40 hover:border-blue-400'
+      id: 'storyboard-studio',
+      title: 'Storyboard',
+      badge: 'Multi-Shot',
+      desc: 'Plan cinematic narrative sequences with custom lenses & scripts',
+      icon: LayoutGrid,
+      tab: 'storyboard',
+      color: 'from-fuchsia-600/30 via-pink-600/20 to-transparent',
+      borderColor: 'border-fuchsia-500/40 hover:border-fuchsia-400'
+    },
+    {
+      id: 'ai-image-editor',
+      title: 'AI Image Editor',
+      badge: '13 AI Tools',
+      desc: 'Photo Angle, Relight, AnyShoot Try-On, Product Staging & 4K',
+      icon: Sliders,
+      tab: 'edit',
+      color: 'from-amber-600/30 via-orange-600/20 to-transparent',
+      borderColor: 'border-amber-500/40 hover:border-amber-400'
     },
     {
       id: 'character-elements',
@@ -73,14 +84,14 @@ export function HomeScreen({ setTab, setInitialPrompt }) {
       borderColor: 'border-emerald-500/40 hover:border-emerald-400'
     },
     {
-      id: 'ai-image-editor',
-      title: 'AI Image Editor',
-      badge: 'Retouch & Dub',
-      desc: 'One-click background removal, 4K upscaling & 18-language dubbing',
-      icon: Sliders,
-      tab: 'edit',
-      color: 'from-amber-600/30 via-orange-600/20 to-transparent',
-      borderColor: 'border-amber-500/40 hover:border-amber-400'
+      id: 'ads-supercomputer',
+      title: 'Ads Supercomputer',
+      badge: 'Autonomous Agent',
+      desc: 'Takes brand briefs and generates 4-shot commercial packages',
+      icon: Tv,
+      tab: 'ads',
+      color: 'from-blue-600/30 via-cyan-600/20 to-transparent',
+      borderColor: 'border-blue-500/40 hover:border-blue-400'
     }
   ];
 
@@ -155,8 +166,8 @@ export function HomeScreen({ setTab, setInitialPrompt }) {
         </div>
       </div>
 
-      {/* 4 Higgsfield Workspaces Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 5 Higgsfield Workspaces Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {actionCards.map((card) => {
           const Icon = card.icon;
           return (

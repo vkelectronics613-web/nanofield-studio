@@ -168,7 +168,7 @@ const TOOLS = [
   },
   {
     name: 'nanofield_edit_image',
-    description: 'Perform timeline-free, prompt-based AI image editing, 4K upscaling, background removal, or re-framing.',
+    description: 'Perform Higgsfield precision AI image transformations: Photo Angle 3D orbit, Relight Studio, Virtual Try-On (AnyShoot), Product Photography, Character Swap, Face Swap, Edit Text typography, Click-to-Edit, Inpaint, 4K Upscale, and Background Removal.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -178,16 +178,91 @@ const TOOLS = [
         },
         action: {
           type: 'string',
-          enum: ['remove_background', 'upscale_4k', 'cinematic_retouch', 'reframe'],
-          default: 'upscale_4k',
-          description: 'Editing action to perform.'
+          enum: [
+            'photo_angle',
+            'relight',
+            'try_on',
+            'product_photo',
+            'character_swap',
+            'face_swap',
+            'edit_text',
+            'click_to_edit',
+            'inpaint',
+            'upscale_4k',
+            'remove_background',
+            'cinematic_retouch',
+            'reframe'
+          ],
+          default: 'photo_angle',
+          description: 'Higgsfield transformation tool to execute.'
         },
         prompt: {
           type: 'string',
-          description: 'Optional guidance prompt for retouching or re-framing.'
+          description: 'Guidance prompt or description for the edit.'
+        },
+        camera_angle: {
+          type: 'string',
+          description: 'For photo_angle: e.g. "Front (0°)", "3/4 Turn (45°)", "Side Profile (90°)", "Hero Low-Angle (-30°)", "Drone Aerial (+60°)", "Dutch Tilt (+15°)".'
+        },
+        relight_preset: {
+          type: 'string',
+          description: 'For relight: e.g. "Golden Hour Sunset", "Cyberpunk Neon Dual-Tone", "Film Noir Spotlight", "Softbox Studio Key", "Volumetric God Rays".'
+        },
+        garment: {
+          type: 'string',
+          description: 'For try_on (AnyShoot): garment style to dress model in (e.g. "Matte Black Cyber Trench", "Emerald Silk Gown").'
+        },
+        pedestal: {
+          type: 'string',
+          description: 'For product_photo: staging base (e.g. "Black Obsidian Floating Pedestal", "Liquid Water Splash", "Anti-Gravity Pod").'
+        },
+        text_overlay: {
+          type: 'string',
+          description: 'For edit_text: headline string to synthesize in image typography.'
+        },
+        target_character: {
+          type: 'string',
+          description: 'For character_swap: persona handle or name to swap in.'
+        },
+        target_face: {
+          type: 'string',
+          description: 'For face_swap: target face identity description or URL.'
+        },
+        click_coords: {
+          type: 'string',
+          description: 'For click_to_edit: coordinate pinpoint e.g. "x:50, y:45".'
         }
       },
       required: ['image_url', 'action']
+    }
+  },
+  {
+    name: 'nanofield_storyboard_create',
+    description: 'Create a multi-shot cinematic storyboard in Nano Field Studio with shot types, lens choices, and script beats.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description: 'Title of the storyboard or film sequence.'
+        },
+        shots: {
+          type: 'array',
+          description: 'Array of shots comprising the sequence.',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              type: { type: 'string', description: 'Shot type (e.g. Extreme Wide, Medium Close-Up, Heroic Low Angle)' },
+              lens: { type: 'string', description: 'Lens (e.g. 24mm Anamorphic, 35mm Prime, 85mm Portrait)' },
+              prompt: { type: 'string', description: 'Visual prompt describing the beat' },
+              dialogue: { type: 'string', description: 'Optional dialogue or narration line' }
+            },
+            required: ['prompt']
+          }
+        }
+      },
+      required: ['title', 'shots']
     }
   },
   {
@@ -442,16 +517,57 @@ export default async function handler(req, res) {
         });
       }
 
-      // 8. IMAGE EDITING
+      // 8. IMAGE EDITING & HIGGSFIELD PRECISION MODES
       if (toolName === 'nanofield_edit_image') {
-        const { image_url, action = 'upscale_4k', prompt = '' } = toolArgs;
+        const {
+          image_url,
+          action = 'upscale_4k',
+          prompt = '',
+          camera_angle = '3/4 Turn (45° Cinematic)',
+          relight_preset = 'Cyberpunk Neon Dual-Tone',
+          garment = 'Matte Black Cyber Techwear Trench',
+          pedestal = 'Black Obsidian Floating Pedestal',
+          text_overlay = 'NANO FIELD',
+          target_character = 'Elena (Cyberpunk Operative)',
+          target_face = 'Sarah (Asian Editorial Hero)',
+          click_coords = 'x:50, y:45'
+        } = toolArgs;
+
         const actionLabels = {
+          photo_angle: `3D Photo Angle (${camera_angle})`,
+          relight: `Studio Relight (${relight_preset})`,
+          try_on: `Virtual Try-On AnyShoot (${garment})`,
+          product_photo: `Product Photography (${pedestal})`,
+          character_swap: `Character Swap (${target_character})`,
+          face_swap: `Face Swap (${target_face})`,
+          edit_text: `Typography Overlay ("${text_overlay}")`,
+          click_to_edit: `Click-to-Edit Pinpoint (${click_coords})`,
+          inpaint: 'Generative Brush Inpaint',
           remove_background: 'Background Removed (Transparent Alpha PNG)',
           upscale_4k: '4K Ultra-Clarity Upscaled Render',
           cinematic_retouch: 'Cinematic Dynamic Color Grade',
           reframe: 'Re-framed 16:9 Composition'
         };
+
+        const toolRouteMap = {
+          photo_angle: 'photo-angle',
+          relight: 'relight',
+          try_on: 'try-on',
+          product_photo: 'product-photo',
+          character_swap: 'char-swap',
+          face_swap: 'face-swap',
+          edit_text: 'edit-text',
+          click_to_edit: 'click-to-edit',
+          inpaint: 'inpaint',
+          upscale_4k: 'upscale-4k',
+          remove_background: 'bg-remove',
+          cinematic_retouch: 'prompt-edit',
+          reframe: 'reframe'
+        };
+
         const editTitle = actionLabels[action] || action;
+        const targetTool = toolRouteMap[action] || 'prompt-edit';
+
         const editedCreation = addCreation({
           title: `Edited: ${editTitle}`,
           prompt: prompt || `Action: ${action} on ${image_url}`,
@@ -459,6 +575,7 @@ export default async function handler(req, res) {
           aspect_ratio: '16:9',
           url: image_url
         });
+
         return res.status(200).json({
           jsonrpc: '2.0',
           id,
@@ -466,13 +583,38 @@ export default async function handler(req, res) {
             content: [
               {
                 type: 'text',
-                text: `✨ **Image Edit Complete: ${editTitle}**\n\n![Edited Image](${image_url})\n\n- Original: [View Source](${image_url})\n- [Open in Studio Editor](${officialBaseUrl}/editor)`
+                text: `✨ **Higgsfield Transformation Complete: ${editTitle}**\n\n![Edited Image](${image_url})\n\n- Original: [View Source](${image_url})\n- [Open in Studio Editor](${officialBaseUrl}/editor?tool=${targetTool})`
               }
             ],
             edited_asset: {
               url: image_url,
               action,
-              studio_url: `${officialBaseUrl}/editor`
+              tool: targetTool,
+              studio_url: `${officialBaseUrl}/editor?tool=${targetTool}`
+            }
+          }
+        });
+      }
+
+      // 8B. STORYBOARD CREATION
+      if (toolName === 'nanofield_storyboard_create') {
+        const { title, shots = [] } = toolArgs;
+        return res.status(200).json({
+          jsonrpc: '2.0',
+          id,
+          result: {
+            content: [
+              {
+                type: 'text',
+                text: `🎬 **Cinematic Storyboard Sequence Created: ${title}**\n\nTotal Shots: ${shots.length}\n` +
+                  shots.map((s, i) => `\n**Shot ${i + 1}: ${s.name || s.type || 'Beat'}**\n- Type: ${s.type || 'Cinematic'}\n- Lens: ${s.lens || '35mm Prime'}\n- Prompt: *"${s.prompt}"*${s.dialogue ? `\n- Dialogue: "${s.dialogue}"` : ''}`).join('\n') +
+                  `\n\n- [Launch Storyboard Studio](${officialBaseUrl}/storyboard)`
+              }
+            ],
+            storyboard: {
+              title,
+              shots_count: shots.length,
+              studio_url: `${officialBaseUrl}/storyboard`
             }
           }
         });
