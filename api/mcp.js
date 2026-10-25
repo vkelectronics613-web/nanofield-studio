@@ -583,7 +583,11 @@ export default async function handler(req, res) {
           responseContent.push({
             type: 'image',
             data: rawBase64,
-            mimeType
+            mimeType,
+            annotations: {
+              audience: ['user', 'assistant'],
+              priority: 1.0
+            }
           });
         }
 
@@ -866,7 +870,11 @@ export default async function handler(req, res) {
             responseContent.push({
               type: 'image',
               data: rawBase64,
-              mimeType
+              mimeType,
+              annotations: {
+                audience: ['user', 'assistant'],
+                priority: 1.0
+              }
             });
           }
         });
