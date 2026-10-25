@@ -36,7 +36,7 @@ export default async function handler(req, res) {
   const targetVariants = Number(variants || num_images || 1);
 
   // Connect to live Nano Field Flow Engine via Cloudflare tunnel or environment URL
-  const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://keyword-lou-indianapolis-sitting.trycloudflare.com';
+  const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://external-smallest-thank-isaac.trycloudflare.com';
   
   try {
     const bridgeRes = await fetch(`${localEngineUrl}/api/v1/generate`, {
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         aspect_ratio,
         variants: targetVariants
       }),
-      signal: AbortSignal.timeout(60000)
+      signal: AbortSignal.timeout(45000)
     });
 
     if (bridgeRes.ok) {

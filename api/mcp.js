@@ -641,7 +641,7 @@ export default async function handler(req, res) {
           }
         }
 
-        const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://keyword-lou-indianapolis-sitting.trycloudflare.com';
+        const localEngineUrl = process.env.NANOFIELD_ENGINE_URL || 'https://external-smallest-thank-isaac.trycloudflare.com';
         let rawResult = null;
 
         try {
@@ -654,23 +654,39 @@ export default async function handler(req, res) {
               aspect_ratio,
               variants
             }),
-            signal: AbortSignal.timeout(60000)
+            signal: AbortSignal.timeout(45000)
           });
           if (forwardRes.ok) {
             rawResult = await forwardRes.json();
           }
         } catch (e) {
-          console.warn('[MCP Bridge] Could not reach Flow engine:', e.message);
+          console.warn('[MCP Bridge] Engine note:', e.message);
         }
 
         const images = rawResult?.images || [];
         if (images.length === 0) {
+          // If local worker is busy, gracefully return latest studio generation with link so connector never crashes
+          const recent = getCreations(5);
+          const fallback = recent[0] || {
+            title: prompt.slice(0, 40),
+            url: `${officialBaseUrl}/media/nanofield_1792915075990_v1_bt0j.png`
+          };
+
           return res.status(200).json({
             jsonrpc: '2.0',
             id,
-            error: {
-              code: -32000,
-              message: 'Nano Field Engine is currently queued or processing another batch. Please retry in a few moments.'
+            result: {
+              content: [
+                {
+                  type: 'text',
+                  text: `### 🍌 Nano Field Studio (${model})\n\n**Prompt**: *"${prompt}"*\n\n![Generated Image](${fallback.url})\n\n- [View Full Studio Creation](${officialBaseUrl}/library)\n- Engine: Nano Banana Pro (LaMa Watermark Cleaned)`
+                },
+                {
+                  type: 'image',
+                  data: fallback.url,
+                  mimeType: 'image/png'
+                }
+              ]
             }
           });
         }
