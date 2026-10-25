@@ -3,7 +3,6 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { HomeScreen } from './components/HomeScreen';
 import { CreateScreen } from './components/CreateScreen';
-import { CinemaStudioScreen } from './components/CinemaStudioScreen';
 import { AdsStudioScreen } from './components/AdsStudioScreen';
 import { EditScreen } from './components/EditScreen';
 import { CharactersScreen } from './components/CharactersScreen';
@@ -27,7 +26,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0b0f19] text-slate-100 font-sans antialiased selection:bg-purple-600 selection:text-white">
+    <div className="flex min-h-screen bg-[#08080c] text-slate-100 font-sans antialiased selection:bg-purple-600 selection:text-white">
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar 
@@ -56,12 +55,6 @@ export default function App() {
           {currentTab === 'create' && (
             <CreateScreen 
               initialPrompt={initialPrompt} 
-              deductCredits={deductCredits} 
-            />
-          )}
-
-          {currentTab === 'cinema' && (
-            <CinemaStudioScreen 
               deductCredits={deductCredits} 
             />
           )}

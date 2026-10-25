@@ -125,13 +125,13 @@ export function CreateScreen({ initialPrompt = '', deductCredits }) {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left Control Panel (5 Cols) */}
-      <div className="lg:col-span-5 space-y-6 bg-slate-900/80 border border-slate-800 p-6 rounded-3xl shadow-xl">
+      <div className="lg:col-span-5 space-y-5 bg-[#0e0e16] border border-[#1c1c28] p-6 rounded-3xl shadow-2xl">
         {/* Mode Tabs */}
         <div>
-          <div className="text-xs font-semibold text-slate-400 mb-2.5 uppercase tracking-wider">Mode</div>
-          <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800/80">
+          <div className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Creation Mode</div>
+          <div className="grid grid-cols-3 gap-1 bg-[#08080c] p-1.5 rounded-2xl border border-[#181824]">
             {[
               { id: 'text-to-image', label: 'Text to Image' },
               { id: 'image-to-image', label: 'Image to Image' },
@@ -140,9 +140,9 @@ export function CreateScreen({ initialPrompt = '', deductCredits }) {
               <button
                 key={m.id}
                 onClick={() => setActiveMode(m.id)}
-                className={`py-2 px-2 text-xs font-medium rounded-xl transition-all ${
+                className={`py-2 px-2 text-xs font-semibold rounded-xl transition-all ${
                   activeMode === m.id
-                    ? 'bg-purple-600 text-white font-semibold shadow-md shadow-purple-600/30'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -155,13 +155,13 @@ export function CreateScreen({ initialPrompt = '', deductCredits }) {
         {/* Prompt Input */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-slate-300">Prompt</span>
+            <span className="font-bold text-slate-200">Visual Prompt</span>
             <button 
               onClick={handleEnhancePrompt}
-              className="flex items-center gap-1 text-[11px] text-purple-400 hover:text-purple-300 font-medium"
+              className="flex items-center gap-1 text-[11px] text-purple-400 hover:text-purple-300 font-semibold"
             >
               <Sparkles className="w-3 h-3" />
-              <span>Enhance</span>
+              <span>Auto-Enhance</span>
             </button>
           </div>
           <div className="relative">
@@ -169,12 +169,31 @@ export function CreateScreen({ initialPrompt = '', deductCredits }) {
               rows={4}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="A golden retriever wearing sunglasses at the beach, cinematic lighting, high detail..."
-              className="w-full p-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500/80 focus:ring-1 focus:ring-purple-500/40 transition-all resize-none leading-relaxed"
+              placeholder="Describe your scene or type @ to mention a character..."
+              className="w-full p-3.5 bg-[#08080c] border border-[#1f1f2e] rounded-2xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500/80 focus:ring-1 focus:ring-purple-500/40 transition-all resize-none leading-relaxed"
             />
             <div className="absolute right-3 bottom-3 text-[10px] text-slate-500 font-mono">
               {prompt.length}/800
             </div>
+          </div>
+
+          {/* Quick Style Presets (Higgsfield Style) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px]">
+            <span className="text-slate-500 shrink-0 font-medium">Style:</span>
+            {[
+              { label: 'Cinematic 35mm', tag: 'shot on 35mm Kodak film, anamorphic lens flare, moody volumetric lighting' },
+              { label: 'Hyper-Realistic', tag: 'photorealistic 8k, raw studio lighting, ultra-detailed skin textures' },
+              { label: 'Cyberpunk', tag: 'cyberpunk neon hues, reflective wet asphalt, glowing holograms' },
+              { label: 'Anime Studio', tag: 'vibrant anime aesthetic, Makoto Shinkai lighting, detailed clouds' }
+            ].map((st, i) => (
+              <button
+                key={i}
+                onClick={() => setPrompt((prev) => prev + `, ${st.tag}`)}
+                className="shrink-0 px-2.5 py-1 rounded-lg bg-[#14141e] border border-[#20202e] hover:border-purple-500/50 text-slate-300 hover:text-white transition-colors"
+              >
+                +{st.label}
+              </button>
+            ))}
           </div>
         </div>
 
