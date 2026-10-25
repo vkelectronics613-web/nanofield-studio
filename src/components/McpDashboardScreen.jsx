@@ -36,7 +36,10 @@ export function McpDashboardScreen() {
 
   const claudeConfig = JSON.stringify({
     "mcpServers": {
-      "nanofield": {
+      "nanofield-cloud": {
+        "url": "https://web-nine-eta-b63lv577w6.vercel.app/api/mcp?sse=true"
+      },
+      "nanofield-local": {
         "command": "node",
         "args": [
           "C:\\Users\\Asus\\.gemini\\antigravity\\scratch\\nanofield\\mcp\\index.js"
@@ -51,10 +54,7 @@ export function McpDashboardScreen() {
   const cursorConfig = JSON.stringify({
     "cursor.mcpServers": {
       "nanofield": {
-        "command": "node",
-        "args": [
-          "C:\\Users\\Asus\\.gemini\\antigravity\\scratch\\nanofield\\mcp\\index.js"
-        ]
+        "url": "https://web-nine-eta-b63lv577w6.vercel.app/api/mcp?sse=true"
       }
     }
   }, null, 2);
@@ -62,17 +62,14 @@ export function McpDashboardScreen() {
   const windsurfConfig = JSON.stringify({
     "mcpServers": {
       "nanofield": {
-        "command": "node",
-        "args": [
-          "C:\\Users\\Asus\\.gemini\\antigravity\\scratch\\nanofield\\mcp\\index.js"
-        ]
+        "url": "https://web-nine-eta-b63lv577w6.vercel.app/api/mcp?sse=true"
       }
     }
   }, null, 2);
 
-  const openClawConfig = `# OpenClaw / CLI agent invocation:
-export NANOFIELD_MCP_PATH="C:/Users/Asus/.gemini/antigravity/scratch/nanofield/mcp/index.js"
-openclaw mcp add nanofield --command "node $NANOFIELD_MCP_PATH"`;
+  const openClawConfig = `# OpenClaw / Web AI Agent integration:
+# Connect directly to your public Vercel MCP server:
+openclaw mcp add nanofield --url "https://web-nine-eta-b63lv577w6.vercel.app/api/mcp?sse=true"`;
 
   // Test live MCP execution
   const handleTestMcpCall = async () => {
