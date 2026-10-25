@@ -591,15 +591,17 @@ export default async function handler(req, res) {
           });
         }
 
-        let markdown = toolName === 'nanofield_get_image' && creations[0]
-          ? `### 🖼️ Studio Asset: \`${creations[0].title}\`\n\n- **Direct URL**: ${creations[0].url}\n- **Studio Library**: ${officialBaseUrl}/library\n\n`
-          : `### 🎨 Recent Studio Creations (${creations.length})\n\n`;
-
-        creations.slice(0, Number(limit)).forEach((item, idx) => {
-          markdown += `**${idx + 1}. \`${item.title}\`**\n`;
-          markdown += `- **Direct URL**: ${item.url}\n`;
-          markdown += `- [Open in Studio Library](${officialBaseUrl}/library)\n\n`;
-        });
+        let markdown = '';
+        if (creations[0]?.base64) {
+          markdown = `**Asset:** \`${creations[0].title}\` | [Direct Link](${creations[0].url}) | [Studio Library](${officialBaseUrl}/library)`;
+        } else {
+          markdown = `### 🎨 Recent Studio Creations (${creations.length})\n\n`;
+          creations.slice(0, Number(limit)).forEach((item, idx) => {
+            markdown += `**${idx + 1}. \`${item.title}\`**\n`;
+            markdown += `- **Direct URL**: ${item.url}\n`;
+            markdown += `- [Open in Studio Library](${officialBaseUrl}/library)\n\n`;
+          });
+        }
 
         responseContent.push({
           type: 'text',
