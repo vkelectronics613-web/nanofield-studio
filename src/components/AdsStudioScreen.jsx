@@ -102,16 +102,30 @@ export function AdsStudioScreen({ deductCredits }) {
 
     try {
       const prompt = `Commercial product advertisement for ${productName} by ${brandName}, ${adTone}, clean luxury studio lighting, 8k award-winning commercial cinematography`;
-      const res = await fetch('http://localhost:3001/api/v1/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          model: chosenModel,
-          aspect_ratio: adRatio === '9:16' ? '9:16' : '16:9',
-          variants: 2
-        })
-      });
+      let res;
+      try {
+        res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            model: chosenModel,
+            aspect_ratio: adRatio === '9:16' ? '9:16' : '16:9',
+            variants: 2
+          })
+        });
+      } catch {
+        res = await fetch('http://localhost:3001/api/v1/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            model: chosenModel,
+            aspect_ratio: adRatio === '9:16' ? '9:16' : '16:9',
+            variants: 2
+          })
+        });
+      }
 
       if (res.ok) {
         const data = await res.json();

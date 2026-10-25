@@ -82,17 +82,33 @@ export function CreateScreen({ initialPrompt = '', deductCredits }) {
       const timeoutId = setTimeout(() => controller.abort(), 120000);
 
       // Call live Nano Field API Engine with selected variants
-      const res = await fetch('http://localhost:3001/api/v1/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          model,
-          aspect_ratio: aspectRatio,
-          variants: numImages
-        }),
-        signal: controller.signal
-      });
+      let res;
+      try {
+        res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            model,
+            aspect_ratio: aspectRatio,
+            variants: numImages
+          }),
+          signal: controller.signal
+        });
+      } catch (err) {
+        // Fallback to local port if running outside Vercel
+        res = await fetch('http://localhost:3001/api/v1/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            model,
+            aspect_ratio: aspectRatio,
+            variants: numImages
+          }),
+          signal: controller.signal
+        });
+      }
 
       clearTimeout(timeoutId);
 

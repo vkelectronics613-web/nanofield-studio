@@ -55,13 +55,27 @@ export default async function handler(req, res) {
     }
   }
 
-  // Cloud render response
+  // Real AI image generation via Flux / Cloud Engine
+  const ratioMap = {
+    '16:9': { width: 1280, height: 720 },
+    '21:9': { width: 1344, height: 576 },
+    '1:1': { width: 1024, height: 1024 },
+    '9:16': { width: 720, height: 1280 },
+    '4:3': { width: 1024, height: 768 },
+    '3:4': { width: 768, height: 1024 }
+  };
+  const dims = ratioMap[aspect_ratio] || { width: 1280, height: 720 };
+  const baseSeed = Math.floor(Math.random() * 900000) + 100000;
+
   const images = [];
   for (let i = 0; i < targetVariants; i++) {
+    const seed = baseSeed + i * 137;
+    const cleanPrompt = encodeURIComponent(prompt.trim());
+    const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${dims.width}&height=${dims.height}&model=flux&seed=${seed}&nologo=true`;
     images.push({
       variant: i + 1,
-      url: `https://images.unsplash.com/photo-${1578632767115 + i * 2000}?auto=format&fit=crop&w=1200&q=80`,
-      filename: `nanofield_${Date.now()}_v${i + 1}.png`
+      url,
+      filename: `nanofield_${Date.now()}_v${i + 1}.jpg`
     });
   }
 
