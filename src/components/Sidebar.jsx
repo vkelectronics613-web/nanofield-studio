@@ -32,7 +32,7 @@ export function Sidebar({ currentTab, setTab, onUpgradeClick }) {
   ];
 
   const systemNav = [
-    { id: 'mcp', label: 'Nano Field MCP', icon: Terminal, badge: 'Public' },
+    { id: 'mcp', label: 'MCP', icon: Terminal, badge: 'Public' },
     { id: 'prompts', label: 'Prompt Library', icon: BookOpen },
   ];
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { HomeScreen } from './components/HomeScreen';
@@ -15,11 +15,90 @@ import { SettingsScreen } from './components/SettingsScreen';
 import { MobileNav } from './components/MobileNav';
 import { UpgradeModal } from './components/UpgradeModal';
 
+const pathToTab = (pathname) => {
+  const cleanPath = (pathname || '').toLowerCase().replace(/\/+$/, '');
+  switch (cleanPath) {
+    case '/imagestudio':
+    case '/create':
+      return 'create';
+    case '/ads':
+      return 'ads';
+    case '/characters':
+      return 'characters';
+    case '/editor':
+    case '/edit':
+      return 'edit';
+    case '/mcp':
+      return 'mcp';
+    case '/prompts':
+      return 'prompts';
+    case '/library':
+      return 'library';
+    case '/projects':
+      return 'projects';
+    case '/account':
+      return 'account';
+    case '/settings':
+      return 'settings';
+    case '/explore':
+    case '':
+    case '/':
+    default:
+      return 'home';
+  }
+};
+
+const tabToPath = {
+  home: '/explore',
+  create: '/imagestudio',
+  ads: '/ads',
+  characters: '/characters',
+  edit: '/editor',
+  mcp: '/mcp',
+  prompts: '/prompts',
+  library: '/library',
+  projects: '/projects',
+  account: '/account',
+  settings: '/settings'
+};
+
 export default function App() {
-  const [currentTab, setCurrentTab] = useState('home');
+  const [currentTab, setCurrentTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return pathToTab(window.location.pathname);
+    }
+    return 'home';
+  });
   const [credits, setCredits] = useState(1250);
   const [initialPrompt, setInitialPrompt] = useState('');
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+
+  useEffect(() => {
+    const initialPath = window.location.pathname;
+    const initialTab = pathToTab(initialPath);
+    setCurrentTab(initialTab);
+
+    // If user lands on root '/', update address bar to '/explore' cleanly
+    if (initialPath === '/' || initialPath === '') {
+      window.history.replaceState({ tab: 'home' }, '', '/explore');
+    }
+
+    const handlePopState = () => {
+      const tabFromPath = pathToTab(window.location.pathname);
+      setCurrentTab(tabFromPath);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleNavigate = (tabId) => {
+    setCurrentTab(tabId);
+    const targetPath = tabToPath[tabId] || '/explore';
+    if (typeof window !== 'undefined' && window.location.pathname !== targetPath) {
+      window.history.pushState({ tab: tabId }, '', targetPath);
+    }
+  };
 
   const deductCredits = (amount) => {
     setCredits((prev) => Math.max(0, prev - amount));
@@ -31,7 +110,7 @@ export default function App() {
       <div className="hidden md:block">
         <Sidebar 
           currentTab={currentTab} 
-          setTab={setCurrentTab} 
+          setTab={handleNavigate} 
           onUpgradeClick={() => setIsUpgradeOpen(true)} 
         />
       </div>
@@ -41,13 +120,13 @@ export default function App() {
         <Header 
           credits={credits} 
           onUpgradeClick={() => setIsUpgradeOpen(true)}
-          onNewCreate={() => setCurrentTab('create')}
+          onNewCreate={() => handleNavigate('create')}
         />
 
         <main className="flex-1 overflow-y-auto">
           {currentTab === 'home' && (
             <HomeScreen 
-              setTab={setCurrentTab} 
+              setTab={handleNavigate} 
               setInitialPrompt={setInitialPrompt} 
             />
           )}
@@ -83,21 +162,21 @@ export default function App() {
 
           {currentTab === 'prompts' && (
             <PromptLibraryScreen 
-              setTab={setCurrentTab} 
+              setTab={handleNavigate} 
               setInitialPrompt={setInitialPrompt} 
             />
           )}
 
           {currentTab === 'library' && (
             <LibraryScreen 
-              setTab={setCurrentTab} 
+              setTab={handleNavigate} 
               setInitialPrompt={setInitialPrompt} 
             />
           )}
 
           {currentTab === 'projects' && (
             <ProjectsScreen 
-              setTab={setCurrentTab} 
+              setTab={handleNavigate} 
             />
           )}
 
@@ -117,7 +196,7 @@ export default function App() {
       {/* Mobile Floating Bottom Bar */}
       <MobileNav 
         currentTab={currentTab} 
-        setTab={setCurrentTab} 
+        setTab={handleNavigate} 
       />
 
       {/* Upgrade & Monetization Modal */}
